@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChromoDoro Settings</title>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="css/base.css"/>
+<script src="js/jquery-2.0.3.min.js"></script>
+<script src="js/knockout-2.3.0.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/commons.js"></script>
+<script src="js/models.js"></script>
+<script src="js/options.js"></script>
+</head>
+<body>
+  <div class="page-header">
+    <h1>番茄鐘工作法</h1>
+  </div>
+
+  <div id="todos">
+    <div id="header">
+      <input id="new-todo" data-bind="value: current, valueUpdate: 'afterkeydown', enterKey: add"
+        placeholder="加入新的工作項目.." autofocus />
+    </div>
+    <div id="container" data-bind="visible: all().length">
+      <input id="toggle-all" data-bind="checked: allCompleted" type="checkbox">
+      <label for="toggle-all">Mark all as complete</label>
+      <ul id="todo-list" data-bind="foreach: filteredTodos">
+        <li data-bind="css: { completed: completed, editing: editing, running: running }">
+          <div class="view">
+            <input class="toggle" data-bind="checked: completed" type="checkbox">
+            <label data-bind="text: title, event: { dblclick: $root.editItem }"></label>
+            <button class="start" data-bind="click: $root.start, visible: !$root.running() && !completed()"></button>
+            <button class="breaked" data-bind="click: $root.breaked, visible: running"></button>
+            <button class="stop" data-bind="click: $root.stop, visible: running"></button>
+            <button class="destroy" data-bind="click: $root.remove, visible: !running()"></button>
+          </div>
+          <input class="edit" data-bind="value: title, valueUpdate: 'afterkeydown',
+            enterKey: $root.stopEditing, selectAndFocus: editing,
+            event: { blur: $root.stopEditing }">
+        </li>
+      </ul>
+    </div>
+    <div id="footer" data-bind="visible: completedCount() || remainingCount()">
+      <span id="todo-count">
+        剩 <strong data-bind="text: remainingCount">0</strong> 項待辦
+      </span>
+      <ul id="filters">
+        <li>
+          <a data-bind="click: function() { showMode('active'); },
+            css: { selected: showMode() == 'active' }" href="#/active">待辦</a>
+        </li>
+        <li>
+          <a data-bind="click: function() { showMode('completed'); },
+            css: { selected: showMode() == 'completed' }" href="#/completed">已完成</a>
+        </li>
+        <li>
+          <a data-bind="click: function() { showMode('all'); },
+            css: { selected: showMode() == 'all' }" href="#/all">全部</a>
+        </li>
+      </ul>
+      <button id="clear-completed" data-bind="visible: completedCount, click: removeCompleted">
+        清除已完成（<span data-bind="text: completedCount"></span>）
+      </button>
+    </div>
+  </div>
+
+  <p><hr/></p>
+  <div id="activities">
+    <div id="header">
+      <div class="info">
+        <span data-bind="text: nickname"></span> 的
+        <span data-bind="text: today"></span> 工作紀錄
+      </div>
+    </div>
+    <div id="container" data-bind="visible: all().length">
+      <ul id="activity-list" data-bind="foreach: all">
+        <li data-bind="css: { completed: completed, running: running }">
+          <div class="view">
+            <label data-bind="text: title"></label>
+            <span class="actual" data-bind="foreach: new Array(actual())">
+              <button>●</button>
+            </span>
+            <span class="breaked" data-bind="foreach: new Array(breaked())">
+              <button>○</button>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <p><hr/></p>
+
+  <form name="options-form" data-bind="submit: save" class="form-horizontal" role="form">
+    <div class="form-group">
+      <label for="nickname" class="col-sm-2 control-label">我的暱稱：</label>
+      <div class="col-sm-10">
+        <input type="text" id="nickname" class="form-control" data-bind="value: nickname" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="work_length" class="col-sm-2 control-label">工作時間：</label>
+      <div class="col-sm-10">
+        <input type="text" id="work_length" class="form-control" data-bind="value: workLength" />
+        分鐘
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="rest_length" class="col-sm-2 control-label">休息時間：</label>
+      <div class="col-sm-10">
+        <input type="text" id="rest_length" class="form-control" data-bind="value: restLength" />
+        分鐘
+      </div>
+    </div>
+    <hr/>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <label for="play_sound">
+          <input id="play_sound" data-bind="checked: playSound" type="checkbox" />
+          開啟音效提醒
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <label for="calendar_sync">
+          <input id="calendar_sync" data-bind="checked: syncToCalendar" type="checkbox" />
+          將資料同步到與 Google Calendar
+        </label>
+        (<a href="http://my-doings.appspot.com" target="_blank">需授權</a>)
+      </div>
+    </div>
+    <hr/>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <label class="checkbox-inline">
+          <input type="radio" id="icon_default" value="default"
+            data-bind="click: function() { setIcon('default'); }, checked: icon" />
+          <label for="icon_default">
+            <img src="img/icon_default.png" />
+          </label>
+        </label>
+        <label class="checkbox-inline">
+          <input type="radio" id="icon_cat" value="cat"
+            data-bind="click: function() { setIcon('cat'); }, checked: icon" />
+          <label for="icon_cat">
+            <img src="img/icon_cat.png" />
+          </label>
+        </label>
+        <label class="checkbox-inline">
+          <input type="radio" id="icon_clock" value="clock"
+            data-bind="click: function() { setIcon('clock'); }, checked: icon" />
+          <label for="icon_clock">
+            <img src="img/icon_clock.png" />
+          </label>
+        </label>
+      </div>
+    <div>
+    <div>
+      <button type="submit" class="btn btn-primary">儲存設定</button>
+      <span>
+        版本 <span id="version" data-bind="text: version"></span>
+      </span>
+    </div>
+  </form>
+</body>
+</html>
